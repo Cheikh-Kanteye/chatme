@@ -1,4 +1,4 @@
-import { PRIMARY_COLOR } from "@misc/colors";
+import { BACKGROUND_COLOR } from "@misc/colors";
 import {
   Image,
   ImageSourcePropType,
@@ -9,22 +9,24 @@ import {
 interface ActionProps {
   label: string;
   icon: ImageSourcePropType;
+  onPress: () => void;
 }
 
-const Action = ({ label, icon }: ActionProps) => {
+const Action = ({ label, icon, onPress }: ActionProps) => {
   return (
     <TouchableOpacity
       style={{ flexDirection: "row", gap: 8, alignItems: "center" }}
+      onPress={onPress}
     >
       <Image
         source={icon}
-        style={{ width: 18, height: 18, tintColor: PRIMARY_COLOR }}
+        style={{ width: 18, height: 18, tintColor: BACKGROUND_COLOR }}
         resizeMode="contain"
       />
       <Text
         style={{
           fontSize: 14,
-          color: PRIMARY_COLOR,
+          color: BACKGROUND_COLOR,
           textTransform: "capitalize",
         }}
       >

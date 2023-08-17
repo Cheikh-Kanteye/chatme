@@ -1,28 +1,32 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import React from "react";
+import { ColorValue, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { FLOAT_SIZE, SPACING } from "@misc/const";
-import { BACKGROUND_COLOR, PRIMARY_COLOR } from "@misc/colors";
+import { BACKGROUND_COLOR } from "@misc/colors";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import { mix } from "react-native-redash";
 
 interface FloatingBtnProps {
   onPress: () => void;
+  open: Animated.SharedValue<number>;
   toggle: boolean;
+  color: ColorValue;
 }
-const FloatingBtn = ({ toggle, onPress }: FloatingBtnProps) => {
+const FloatingBtn = ({ toggle, onPress, open, color }: FloatingBtnProps) => {
+  const AnimatedIconStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${mix(open.value, Math.PI / 4, 0)}rad` }],
+  }));
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={onPress}
       style={[
         styles.moreActions,
-        { backgroundColor: toggle ? BACKGROUND_COLOR : PRIMARY_COLOR },
+        { backgroundColor: toggle ? BACKGROUND_COLOR : color },
       ]}
     >
-      <Ionicons
-        name={toggle ? "close" : "add"}
-        size={24}
-        color={toggle ? PRIMARY_COLOR : "white"}
-      />
-    </TouchableOpacity>
+      <Animated.View style={AnimatedIconStyle}>
+        <Ionicons name={"add"} size={24} color={toggle ? color : "white"} />
+      </Animated.View>
+    </Pressable>
   );
 };
 
@@ -43,9 +47,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.17,
     shadowRadius: 2.54,
     elevation: 3,
-    position: "absolute",
-    zIndex: 11,
-    bottom: SPACING,
-    left: SPACING + 8,
   },
 });

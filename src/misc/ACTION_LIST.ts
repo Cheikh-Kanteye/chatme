@@ -31,4 +31,9 @@ export const ACTIONS_LIST = [
     icon: images.poll,
     label: "polling",
   },
+  {
+    id: 7,
+    icon: images.theme,
+    label: "themes",
+  },
 ];

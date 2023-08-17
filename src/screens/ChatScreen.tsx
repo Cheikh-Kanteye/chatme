@@ -1,130 +1,148 @@
 import {
+  ColorValue,
   FlatList,
-  Image,
   ImageBackground,
   Pressable,
   StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { BACKGROUND_COLOR } from "@misc/colors";
+import Animated, {
+  FadeIn,
+  FadeOut,
+  SlideInDown,
+  SlideOutDown,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 import {
-  FLOAT_SIZE,
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
+import { ACCENT_COLOR, BACKDROP_COLOR, BACKGROUND_COLOR } from "@misc/colors";
+import {
   HEIGHT,
   MODAL_H,
   MODAL_W,
+  OVERDRAG,
+  R,
+  SHEET_H,
   SPACING,
-  WIDTH,
-  d,
 } from "@misc/const";
-import IconBtn from "@components/IconBtn";
 import { messages } from "@misc/messages";
 import Message from "@components/Message";
 import { useState } from "react";
-import { Path, Svg } from "react-native-svg";
-import FloatingBtn from "@components/FloatingBtn";
-import Action from "@components/Action";
-import { ACTIONS_LIST } from "@misc/ACTION_LIST";
 import { images } from "@assets/index";
+import ColorPicker from "@components/ColorPicker";
+import ChatFooter from "@components/ChatFooter";
+import ChatHeader from "@components/ChatHeader";
 
 const defaultUser = require("@assets/images/defaultUser.jpg");
-
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const ChatScreen = () => {
+  const [colorAccent, setColorAccent] = useState<ColorValue>(ACCENT_COLOR);
   const [toggle, setToggle] = useState(false);
-  const [inputFocused, setFocused] = useState(false);
+  const [pickColor, setPickColor] = useState(false);
+  const open = useSharedValue<number>(1);
+  const offset = useSharedValue(0);
+  const toggleSheet = () => {
+    setPickColor(!pickColor);
+    offset.value = 0;
+  };
+
+  const pan = Gesture.Pan()
+    .onChange((e) => {
+      const delta = e.changeY + offset.value;
+      const clamp = Math.max(-OVERDRAG, delta);
+      offset.value = delta > 0 ? delta : withSpring(clamp);
+    })
+    .onFinalize(() => {
+      if (offset.value < SHEET_H / 3) {
+        offset.value = withSpring(0);
+      } else {
+        offset.value = withTiming(SHEET_H, {}, () => {
+          runOnJS(toggleSheet)();
+        });
+      }
+    });
+
+  const translateY = useAnimatedStyle(() => ({
+    transform: [{ translateY: offset.value }],
+  }));
+
   return (
-    <ImageBackground
-      source={images.bg}
-      resizeMode="cover"
-      style={styles.container}
-    >
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn}>
-          <Ionicons name="ios-chevron-back-sharp" size={24} color={"black"} />
-        </TouchableOpacity>
-        <Pressable style={styles.userInfo}>
-          <View style={styles.userImage}>
-            <Image
-              source={defaultUser}
-              style={{ width: "100%", height: "100%" }}
-              resizeMode="cover"
-            />
-          </View>
-          <View>
-            <Text>Abdurrahman Client</Text>
-            <Text>Online</Text>
-          </View>
-        </Pressable>
-        <View style={styles.actions}>
-          <IconBtn icon="videocam-outline" />
-          <IconBtn icon="call-outline" />
-        </View>
-      </View>
-      <View style={styles.messagesContainer}>
-        <FlatList
-          showsHorizontalScrollIndicator={false}
-          data={messages}
-          inverted
-          contentContainerStyle={styles.chatsContainer}
-          renderItem={({ item }) => {
-            return (
-              <Message message={item.message} fromMe={item.from == "me"} />
-            );
-          }}
-          keyExtractor={(item) => item.id}
+    <GestureHandlerRootView style={styles.container}>
+      <ImageBackground
+        source={images.bg}
+        resizeMode="cover"
+        style={styles.container}
+      >
+        <ChatHeader
+          profileImg={defaultUser}
+          online
+          username="Abdurrahman Client"
         />
-      </View>
-      {toggle && (
-        <View style={styles.overlay}>
-          <View>
-            <Svg width={MODAL_W} height={MODAL_H} fillRule="evenodd">
-              <Path
-                d={d}
-                fill="rgba(0, 0, 0, 0.1)"
-                transform="translate(4, 4)"
-              />
-              <Path d={d} fill={"white"} />
-            </Svg>
-            <View style={styles.actionsBtn}>
-              {ACTIONS_LIST.map((item) => {
-                return (
-                  //@ts-ignore
-                  <Action key={item.id} label={item.label} icon={item.icon} />
-                );
-              })}
-            </View>
-          </View>
-        </View>
-      )}
-      <FloatingBtn onPress={() => setToggle(!toggle)} toggle={toggle} />
-      <View style={styles.footer}>
-        <View style={styles.inputContainer}>
-          <TextInput
-            placeholder="Type Here..."
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            style={styles.input}
-          />
-          <TouchableOpacity
-            style={{
-              width: 40,
-              height: 40,
-              justifyContent: "center",
-              alignItems: "center",
+        <View style={styles.messagesContainer}>
+          <FlatList
+            showsHorizontalScrollIndicator={false}
+            data={messages}
+            inverted
+            contentContainerStyle={styles.chatsContainer}
+            renderItem={({ item }) => {
+              return (
+                <Message
+                  message={item.message}
+                  fromMe={item.from == "me"}
+                  color={colorAccent}
+                />
+              );
             }}
-          >
-            <Ionicons
-              name={inputFocused ? "send-outline" : "mic-outline"}
-              size={22}
-              color={"black"}
-            />
-          </TouchableOpacity>
+            keyExtractor={(item) => item.id}
+          />
         </View>
-      </View>
-    </ImageBackground>
+        <ChatFooter
+          color={colorAccent}
+          open={open}
+          toggle={toggle}
+          onToggle={() => {
+            open.value = withTiming(open.value === 1 ? 0 : 1);
+            setToggle(open.value === 1);
+          }}
+          toggleSheet={toggleSheet}
+          setToggle={setToggle}
+        />
+        {pickColor && (
+          <>
+            <AnimatedPressable
+              style={[
+                StyleSheet.absoluteFillObject,
+                { backgroundColor: BACKDROP_COLOR },
+              ]}
+              entering={FadeIn}
+              exiting={FadeOut}
+              onPress={() => setPickColor(false)}
+            />
+            <GestureDetector gesture={pan}>
+              <Animated.View
+                style={[styles.sheet, translateY]}
+                entering={SlideInDown.springify().damping(15)}
+                exiting={SlideOutDown}
+              >
+                <ColorPicker
+                  onPick={(color: ColorValue) => {
+                    setColorAccent(color);
+                    toggleSheet();
+                  }}
+                />
+              </Animated.View>
+            </GestureDetector>
+          </>
+        )}
+      </ImageBackground>
+    </GestureHandlerRootView>
   );
 };
 
@@ -151,58 +169,16 @@ const styles = StyleSheet.create({
     padding: 16,
     flexDirection: "column-reverse",
   },
-  backBtn: {
-    width: 38,
-    height: 38,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  userInfo: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING / 2,
-  },
-  userImage: {
-    width: 45,
-    height: 45,
-    borderRadius: 22.5,
-    overflow: "hidden",
-  },
-  actions: { flexDirection: "row", gap: 8, alignItems: "flex-end" },
   messagesContainer: {
     flex: 1,
-  },
-  footer: {
-    height: HEIGHT * 0.1,
-    backgroundColor: "white",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 16,
-    gap: SPACING / 2,
-  },
-  inputContainer: {
-    flex: 1,
-    width: WIDTH - FLOAT_SIZE - SPACING * 2.5,
-    height: FLOAT_SIZE,
-    flexDirection: "row",
-    paddingHorizontal: SPACING,
-    backgroundColor: BACKGROUND_COLOR,
-    borderRadius: 20,
-    alignItems: "center",
-    alignSelf: "flex-end",
-    overflow: "hidden",
-  },
-  input: {
-    flex: 1,
-    height: "100%",
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: "flex-end",
     alignItems: "flex-start",
     zIndex: 10,
-    padding: SPACING,
+    paddingHorizontal: SPACING,
+    paddingBottom: 10,
   },
   items: {
     width: MODAL_W,
@@ -213,10 +189,21 @@ const styles = StyleSheet.create({
     height: MODAL_H,
     borderRadius: 20,
     padding: SPACING,
-    paddingTop: SPACING * 1.5,
+    paddingTop: R + SPACING / 2,
     position: "absolute",
     top: 0,
     left: 0,
     gap: SPACING,
+  },
+  sheet: {
+    backgroundColor: "white",
+    padding: SPACING,
+    height: 220,
+    width: "100%",
+    position: "absolute",
+    bottom: -OVERDRAG * 1.1,
+    borderTopRightRadius: R,
+    borderTopLeftRadius: R,
+    zIndex: 11,
   },
 });

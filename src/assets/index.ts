@@ -6,5 +6,6 @@ export const images = {
   location: require("./images/location.png"),
   poll: require("./images/poll.png"),
   users: require("./images/users.png"),
+  theme: require("./images/theme.png"),
   bg: require("./images/bg.jpg"),
 };
