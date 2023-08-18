@@ -1,26 +1,45 @@
-import { ColorValue, StyleSheet, Text, View } from "react-native";
+import { ColorValue, StyleSheet } from "react-native";
 import React from "react";
 import { WIDTH } from "@misc/const";
-import { ACCENT_COLOR, BACKGROUND_COLOR, PRIMARY_COLOR } from "@misc/colors";
+import { messages } from "@misc/messages";
+import Animated, {
+  useAnimatedStyle,
+  withDelay,
+  withTiming,
+} from "react-native-reanimated";
+import isColorDark from "@utils/isColorDark";
 
 interface MessageProps {
   fromMe?: boolean;
   message: string;
-  color: ColorValue;
+  id: string;
+  color: Animated.SharedValue<ColorValue>;
 }
 
-const Message: React.FC<MessageProps> = ({ fromMe, message, color }) => {
+const Message: React.FC<MessageProps> = ({ fromMe, message, color, id }) => {
+  const index = messages.findIndex((msg) => msg.id === id);
+
+  const bg = useAnimatedStyle(() => ({
+    backgroundColor: withDelay(100 * index, withTiming(color.value as never)),
+  }));
+  const textStyle = useAnimatedStyle(() => ({
+    color: withDelay(
+      50 * index,
+      isColorDark(color.value) ? withTiming("white") : withTiming("black")
+    ),
+  }));
+
   return (
-    <Text
+    <Animated.View
       style={[
-        fromMe
-          ? { ...styles.messageFromMe, backgroundColor: color }
-          : { ...styles.messageFromThem, color },
+        fromMe ? [styles.messageFromMe, bg] : styles.messageFromThem,
         styles.messageCommon,
       ]}
     >
-      {message}
-    </Text>
+      <Animated.Text style={[fromMe ? textStyle : { color: "black" }]}>
+        {message}
+      </Animated.Text>
+    </Animated.View>
   );
 };
 
@@ -35,13 +54,13 @@ const styles = StyleSheet.create({
   },
   messageFromThem: {
     borderTopLeftRadius: 0,
+    color: "black",
     borderWidth: StyleSheet.hairlineWidth,
     backgroundColor: "white",
     alignSelf: "flex-start",
   },
   messageFromMe: {
     borderTopRightRadius: 0,
-    color: "white",
     alignSelf: "flex-end",
   },
 });

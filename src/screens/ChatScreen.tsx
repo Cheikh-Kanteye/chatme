@@ -2,35 +2,23 @@ import {
   ColorValue,
   FlatList,
   ImageBackground,
-  Pressable,
   StyleSheet,
   View,
 } from "react-native";
-import Animated, {
-  FadeIn,
-  FadeOut,
-  SlideInDown,
-  SlideOutDown,
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from "react-native-reanimated";
-import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
-} from "react-native-gesture-handler";
-import { ACCENT_COLOR, BACKDROP_COLOR, BACKGROUND_COLOR } from "@misc/colors";
+import { useSharedValue, withTiming } from "react-native-reanimated";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { ACCENT_COLOR, BACKGROUND_COLOR } from "@misc/colors";
 import {
   HEIGHT,
   MODAL_H,
   MODAL_W,
   OVERDRAG,
+  POOL_OVERDRAG,
+  PollingSheetH,
   R,
   SHEET_H,
   SPACING,
+  WIDTH,
 } from "@misc/const";
 import { messages } from "@misc/messages";
 import Message from "@components/Message";
@@ -39,39 +27,42 @@ import { images } from "@assets/index";
 import ColorPicker from "@components/ColorPicker";
 import ChatFooter from "@components/ChatFooter";
 import ChatHeader from "@components/ChatHeader";
+import { useSheetGestureHandler } from "@hooks/useSheetGestureHandler";
+import SheetLayout from "@components/SheetLayout";
+import { Polling } from "@components/index";
 
 const defaultUser = require("@assets/images/defaultUser.jpg");
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const ChatScreen = () => {
-  const [colorAccent, setColorAccent] = useState<ColorValue>(ACCENT_COLOR);
+  const colorAccent = useSharedValue<ColorValue>(ACCENT_COLOR);
   const [toggle, setToggle] = useState(false);
   const [pickColor, setPickColor] = useState(false);
+  const [pool, setPool] = useState(false);
   const open = useSharedValue<number>(1);
-  const offset = useSharedValue(0);
+  const themeOffset = useSharedValue(0);
+  const poolOffset = useSharedValue(0);
+
   const toggleSheet = () => {
     setPickColor(!pickColor);
-    offset.value = 0;
+    themeOffset.value = 0;
+  };
+  const openPool = () => {
+    setPool(!pool);
+    poolOffset.value = 0;
   };
 
-  const pan = Gesture.Pan()
-    .onChange((e) => {
-      const delta = e.changeY + offset.value;
-      const clamp = Math.max(-OVERDRAG, delta);
-      offset.value = delta > 0 ? delta : withSpring(clamp);
-    })
-    .onFinalize(() => {
-      if (offset.value < SHEET_H / 3) {
-        offset.value = withSpring(0);
-      } else {
-        offset.value = withTiming(SHEET_H, {}, () => {
-          runOnJS(toggleSheet)();
-        });
-      }
-    });
+  const themePan = useSheetGestureHandler({
+    sheetH: SHEET_H,
+    offset: themeOffset,
+    toggleSheet,
+    overdrag: OVERDRAG,
+  });
 
-  const translateY = useAnimatedStyle(() => ({
-    transform: [{ translateY: offset.value }],
-  }));
+  const pollingPan = useSheetGestureHandler({
+    sheetH: PollingSheetH,
+    offset: themeOffset,
+    toggleSheet: openPool,
+    overdrag: POOL_OVERDRAG,
+  });
 
   return (
     <GestureHandlerRootView style={styles.container}>
@@ -95,6 +86,7 @@ const ChatScreen = () => {
               return (
                 <Message
                   message={item.message}
+                  id={item.id}
                   fromMe={item.from == "me"}
                   color={colorAccent}
                 />
@@ -113,33 +105,32 @@ const ChatScreen = () => {
           }}
           toggleSheet={toggleSheet}
           setToggle={setToggle}
+          openPool={openPool}
         />
         {pickColor && (
-          <>
-            <AnimatedPressable
-              style={[
-                StyleSheet.absoluteFillObject,
-                { backgroundColor: BACKDROP_COLOR },
-              ]}
-              entering={FadeIn}
-              exiting={FadeOut}
-              onPress={() => setPickColor(false)}
+          <SheetLayout
+            gesture={themePan}
+            offset={themeOffset}
+            sheetStyle={styles.sheet}
+            onPress={toggleSheet}
+          >
+            <ColorPicker
+              onPick={(color: ColorValue) => {
+                colorAccent.value = color;
+                toggleSheet();
+              }}
             />
-            <GestureDetector gesture={pan}>
-              <Animated.View
-                style={[styles.sheet, translateY]}
-                entering={SlideInDown.springify().damping(15)}
-                exiting={SlideOutDown}
-              >
-                <ColorPicker
-                  onPick={(color: ColorValue) => {
-                    setColorAccent(color);
-                    toggleSheet();
-                  }}
-                />
-              </Animated.View>
-            </GestureDetector>
-          </>
+          </SheetLayout>
+        )}
+        {pool && (
+          <SheetLayout
+            gesture={pollingPan}
+            offset={poolOffset}
+            sheetStyle={styles.poolSheet}
+            onPress={openPool}
+          >
+            <Polling color={colorAccent} />
+          </SheetLayout>
         )}
       </ImageBackground>
     </GestureHandlerRootView>
@@ -205,5 +196,14 @@ const styles = StyleSheet.create({
     borderTopRightRadius: R,
     borderTopLeftRadius: R,
     zIndex: 11,
+  },
+  poolSheet: {
+    width: WIDTH,
+    height: PollingSheetH,
+    backgroundColor: BACKGROUND_COLOR,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    paddingHorizontal: SPACING,
+    paddingTop: R + SPACING,
   },
 });

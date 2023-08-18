@@ -4,3 +4,5 @@ export { default as ColorPicker } from "./ColorPicker";
 export { default as SvgPath } from "./SvgPath";
 export { default as ChatFooter } from "./ChatFooter";
 export { default as ChatHeader } from "./ChatHeader";
+export { default as Polling } from "./Polling";
+export { default as SheetLayout } from "./SheetLayout";

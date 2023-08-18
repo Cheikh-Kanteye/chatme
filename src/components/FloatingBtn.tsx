@@ -1,32 +1,52 @@
 import { ColorValue, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { FLOAT_SIZE, SPACING } from "@misc/const";
+import { FLOAT_SIZE } from "@misc/const";
 import { BACKGROUND_COLOR } from "@misc/colors";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import Animated, {
+  useAnimatedStyle,
+  withDelay,
+  withTiming,
+} from "react-native-reanimated";
 import { mix } from "react-native-redash";
+import isColorDark from "@utils/isColorDark";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+const AnimatedIcon = Animated.createAnimatedComponent(Ionicons);
 
 interface FloatingBtnProps {
   onPress: () => void;
   open: Animated.SharedValue<number>;
   toggle: boolean;
-  color: ColorValue;
+  color: Animated.SharedValue<ColorValue>;
 }
 const FloatingBtn = ({ toggle, onPress, open, color }: FloatingBtnProps) => {
   const AnimatedIconStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${mix(open.value, Math.PI / 4, 0)}rad` }],
   }));
+
+  const animStyle = useAnimatedStyle(() => ({
+    backgroundColor: withDelay(
+      100,
+      toggle ? withTiming("white") : withTiming(color.value as never)
+    ),
+  }));
+  const iconStyle = useAnimatedStyle(() => ({
+    color: isColorDark(color.value) ? withTiming("white") : withTiming("black"),
+  }));
+
   return (
-    <Pressable
+    <AnimatedPressable
       onPress={onPress}
-      style={[
-        styles.moreActions,
-        { backgroundColor: toggle ? BACKGROUND_COLOR : color },
-      ]}
+      style={[styles.moreActions, animStyle]}
     >
       <Animated.View style={AnimatedIconStyle}>
-        <Ionicons name={"add"} size={24} color={toggle ? color : "white"} />
+        <AnimatedIcon
+          name={"add"}
+          size={24}
+          style={[toggle ? { color: "black" } : iconStyle]}
+        />
       </Animated.View>
-    </Pressable>
+    </AnimatedPressable>
   );
 };
 

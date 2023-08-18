@@ -9,12 +9,12 @@ export const ACTIONS_LIST = [
   {
     id: 2,
     icon: images.folder,
-    label: "Document",
+    label: "document",
   },
   {
     id: 3,
     icon: images.photo,
-    label: "Photo & video",
+    label: "photo & video",
   },
   {
     id: 4,

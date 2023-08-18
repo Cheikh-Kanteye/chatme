@@ -25,12 +25,13 @@ import { ACTIONS_LIST } from "@misc/ACTION_LIST";
 import Action from "./Action";
 
 interface ChatFooterProps {
-  color: ColorValue;
   setToggle: React.Dispatch<React.SetStateAction<boolean>>;
+  color: Animated.SharedValue<ColorValue>;
   open: Animated.SharedValue<number>;
   toggle: boolean;
   toggleSheet: () => void;
   onToggle: () => void;
+  openPool: () => void;
 }
 
 const ChatFooter = ({
@@ -40,22 +41,46 @@ const ChatFooter = ({
   open,
   setToggle,
   toggleSheet,
+  openPool,
 }: ChatFooterProps) => {
   const [inputFocused, setFocused] = useState(false);
+
+  type actionType = () => void;
+  const doAction = (action: actionType) => {
+    setTimeout(() => {
+      setToggle(false);
+    }, 200);
+    if (toggle) {
+      action();
+    }
+    open.value = withTiming(open.value === 1 ? 0 : 1);
+  };
 
   const actonPressed = (action: string) => {
     switch (action) {
       case "themes":
-        setTimeout(() => {
-          setToggle(false);
-        }, 200);
-        if (toggle) {
-          toggleSheet();
-        }
-        open.value = withTiming(open.value === 1 ? 0 : 1);
+        doAction(toggleSheet);
+        break;
+      case "polling":
+        doAction(openPool);
+        break;
+      case "camera":
+        doAction(() => console.log("Camera"));
+        break;
+      case "document":
+        doAction(() => console.log("Document"));
+        break;
+      case "photo & video":
+        doAction(() => console.log("Photo & Video"));
+        break;
+      case "location":
+        doAction(() => console.log("Location"));
+        break;
+      case "contact":
+        doAction(() => console.log("Contact"));
         break;
       default:
-        console.log("wrong case!");
+        doAction(() => console.log("wrong case!"));
         break;
     }
   };
@@ -71,6 +96,7 @@ const ChatFooter = ({
                 return (
                   <Action
                     key={item.id}
+                    color={color.value}
                     label={item.label}
                     icon={item.icon}
                     onPress={() => {
@@ -125,6 +151,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderTopLeftRadius: 24,
     flexDirection: "row",
+    alignItems: "center",
     borderTopRightRadius: 24,
     padding: 16,
     gap: SPACING / 2,

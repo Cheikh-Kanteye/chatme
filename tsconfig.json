@@ -5,7 +5,9 @@
       "@screens/*": ["src/screens/*"],
       "@components/*": ["src/components/*"],
       "@assets/*": ["src/assets/*"],
-      "@misc/*": ["src/misc/*"]
+      "@misc/*": ["src/misc/*"],
+      "@utils/*": ["src/utils/*"],
+      "@hooks/*": ["src/hooks/*"]
     }
   },
   "extends": "expo/tsconfig.base"

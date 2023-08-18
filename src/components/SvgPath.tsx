@@ -8,8 +8,10 @@ import Animated, {
 } from "react-native-reanimated";
 import { mix } from "react-native-redash";
 
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+
 interface SvgPathProps {
-  color: ColorValue;
+  color: Animated.SharedValue<ColorValue>;
   open: Animated.SharedValue<number>;
 }
 
@@ -34,7 +36,7 @@ const SvgPath = ({ color, open }: SvgPathProps) => {
       <Mask id="mask">
         <AnimatedRect animatedProps={animatedProps} fill={"white"} />
       </Mask>
-      <Path d={d} fill={color} mask="url(#mask)" />
+      <Path d={d} fill={color.value} mask="url(#mask)" />
     </Svg>
   );
 };
