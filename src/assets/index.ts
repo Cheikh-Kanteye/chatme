@@ -8,4 +8,8 @@ export const images = {
   users: require("./images/users.png"),
   theme: require("./images/theme.png"),
   bg: require("./images/bg.jpg"),
+  flash: require("./images/flash.png"),
+  flip: require("./images/flip.png"),
+  speed: require("./images/speed.png"),
+  timer: require("./images/timer.png"),
 };

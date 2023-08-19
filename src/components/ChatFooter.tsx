@@ -32,6 +32,7 @@ interface ChatFooterProps {
   toggleSheet: () => void;
   onToggle: () => void;
   openPool: () => void;
+  toggleCamera: () => void;
 }
 
 const ChatFooter = ({
@@ -42,6 +43,7 @@ const ChatFooter = ({
   setToggle,
   toggleSheet,
   openPool,
+  toggleCamera,
 }: ChatFooterProps) => {
   const [inputFocused, setFocused] = useState(false);
 
@@ -65,7 +67,7 @@ const ChatFooter = ({
         doAction(openPool);
         break;
       case "camera":
-        doAction(() => console.log("Camera"));
+        doAction(toggleCamera);
         break;
       case "document":
         doAction(() => console.log("Document"));

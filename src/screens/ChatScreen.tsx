@@ -29,13 +29,14 @@ import ChatFooter from "@components/ChatFooter";
 import ChatHeader from "@components/ChatHeader";
 import { useSheetGestureHandler } from "@hooks/useSheetGestureHandler";
 import SheetLayout from "@components/SheetLayout";
-import { Polling } from "@components/index";
+import { Camera, Polling } from "@components/index";
 
 const defaultUser = require("@assets/images/defaultUser.jpg");
 const ChatScreen = () => {
   const colorAccent = useSharedValue<ColorValue>(ACCENT_COLOR);
   const [toggle, setToggle] = useState(false);
   const [pickColor, setPickColor] = useState(false);
+  const [openCamera, setOpenCamera] = useState(false);
   const [pool, setPool] = useState(false);
   const open = useSharedValue<number>(1);
   const themeOffset = useSharedValue(0);
@@ -48,6 +49,10 @@ const ChatScreen = () => {
   const openPool = () => {
     setPool(!pool);
     poolOffset.value = 0;
+  };
+
+  const toggleCamera = () => {
+    setOpenCamera(!openCamera);
   };
 
   const themePan = useSheetGestureHandler({
@@ -104,6 +109,7 @@ const ChatScreen = () => {
             setToggle(open.value === 1);
           }}
           toggleSheet={toggleSheet}
+          toggleCamera={toggleCamera}
           setToggle={setToggle}
           openPool={openPool}
         />
@@ -132,6 +138,7 @@ const ChatScreen = () => {
             <Polling color={colorAccent} />
           </SheetLayout>
         )}
+        {openCamera && <Camera setOpenCamera={setOpenCamera} />}
       </ImageBackground>
     </GestureHandlerRootView>
   );

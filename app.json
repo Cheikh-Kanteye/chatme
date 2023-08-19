@@ -6,6 +6,14 @@
     "orientation": "portrait",
     "icon": "./src/assets/images/icon.png",
     "userInterfaceStyle": "light",
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow chatme to access your camera."
+        }
+      ]
+    ],
     "splash": {
       "image": "./src/assets/images/splash.png",
       "resizeMode": "contain",
