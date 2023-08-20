@@ -7,12 +7,29 @@ import {
   Image,
   TouchableOpacity,
 } from "react-native";
-import React, { useState } from "react";
-import { Camera as ExpoCamera, CameraType, FlashMode } from "expo-camera";
-import { HEIGHT, SPACING } from "@misc/const";
-import { ACCENT_COLOR } from "@misc/colors";
+import React, { useRef, useState } from "react";
+import {
+  Camera as ExpoCamera,
+  CameraType,
+  FlashMode,
+  CameraCapturedPicture,
+} from "expo-camera";
+import { HEIGHT, OVERDRAG, R, SPACING, WIDTH } from "@misc/const";
+import { ACCENT_COLOR, BACKGROUND_COLOR } from "@misc/colors";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import { images } from "@assets/index";
+import SheetLayout from "./SheetLayout";
+import SendPicture from "./SendPicture";
+import { useSheetGestureHandler } from "@hooks/useSheetGestureHandler";
+import {
+  runOnJS,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
+import { Gesture } from "react-native-gesture-handler";
+
+const MODAL_HEIGHT = HEIGHT + 60;
 
 interface ButtonProps {
   icon: ImageSourcePropType;
@@ -30,7 +47,7 @@ const Button = ({ icon, label, onPress }: ButtonProps) => {
       style={{
         justifyContent: "center",
         alignItems: "center",
-        width: "100%",
+        width: 80,
         gap: 6,
       }}
     >
@@ -50,6 +67,50 @@ const Camera = ({ setOpenCamera }: CameraProps) => {
   const [type, setType] = useState(CameraType.back);
   const [permission, requestPermission] = ExpoCamera.useCameraPermissions();
   const [flash, setFlash] = useState(FlashMode.off);
+  const [isPicturReady, setIsPictureReady] = useState(false);
+  const [capturedPhoto, setCapturedPhoto] =
+    useState<CameraCapturedPicture | null>(null);
+  const cameraRef = useRef<ExpoCamera | null>(null);
+  const offset = useSharedValue(0);
+
+  const toggleCameraType = () => {
+    setType((current) =>
+      current === CameraType.back ? CameraType.front : CameraType.back
+    );
+  };
+
+  const toggleFlash = () => {
+    setFlash((mode) => (mode === FlashMode.off ? FlashMode.on : FlashMode.off));
+  };
+
+  const toggleSheet = () => {
+    setIsPictureReady(!isPicturReady);
+    offset.value = 0;
+  };
+
+  const takePicktureAsync = async () => {
+    if (cameraRef.current) {
+      const photo = await cameraRef.current.takePictureAsync();
+      setCapturedPhoto(photo);
+      setIsPictureReady(true);
+    }
+  };
+
+  const pan = Gesture.Pan()
+    .onChange((e) => {
+      const delta = e.changeY + offset.value;
+      const clamp = Math.max(-OVERDRAG, delta);
+      offset.value = delta > 0 ? delta : withSpring(clamp);
+    })
+    .onFinalize(() => {
+      if (offset.value < MODAL_HEIGHT / 3) {
+        offset.value = withSpring(0);
+      } else {
+        offset.value = withTiming(MODAL_HEIGHT, {}, () => {
+          runOnJS(toggleSheet)();
+        });
+      }
+    });
 
   if (!permission) {
     requestPermission();
@@ -67,61 +128,101 @@ const Camera = ({ setOpenCamera }: CameraProps) => {
     );
   }
 
-  const toggleCameraType = () => {
-    setType((current) =>
-      current === CameraType.back ? CameraType.front : CameraType.back
-    );
-  };
-
-  const toggleFlash = () => {
-    setFlash((mode) => (mode === FlashMode.off ? FlashMode.on : FlashMode.off));
-  };
-
   return (
-    <ExpoCamera style={styles.container} type={type} flashMode={flash}>
-      <View style={styles.btnGroup}>
-        <TouchableOpacity
-          style={styles.closeBtn}
-          onPress={() => setOpenCamera(false)}
+    <View
+      style={[
+        StyleSheet.absoluteFillObject,
+        { backgroundColor: BACKGROUND_COLOR },
+      ]}
+    >
+      {isPicturReady ? (
+        <SheetLayout
+          gesture={pan}
+          offset={offset}
+          onPress={toggleSheet}
+          sheetStyle={styles.sheet}
         >
-          <Ionicons name="close" size={22} color={"white"} />
-        </TouchableOpacity>
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "flex-end",
-            alignItems: "center",
-            gap: SPACING,
-            paddingBottom: HEIGHT >= 720 ? SPACING * 4.5 : SPACING * 3,
-          }}
-        >
-          <Button icon={images.flash} onPress={toggleFlash} label="flash" />
-          <Button icon={images.flip} onPress={toggleCameraType} label="Flip" />
-          <Button icon={images.timer} onPress={() => null} label="timer" />
-          <Button icon={images.speed} onPress={() => null} label="speed" />
-        </View>
-        <TouchableOpacity style={styles.openGallery}>
-          <Image
-            source={images.defaultUser}
-            resizeMode="cover"
-            style={{ width: "100%", height: "100%" }}
+          <SendPicture picture={capturedPhoto} />
+        </SheetLayout>
+      ) : (
+        <View style={{ flex: 1, height: HEIGHT }}>
+          <ExpoCamera
+            ref={cameraRef}
+            style={{ flex: 1 }}
+            type={type}
+            flashMode={flash}
+            ratio="16:9"
           />
-          <View style={styles.uploadIcon}>
-            <Feather name="upload-cloud" size={20} color={"white"} />
+          <View style={styles.container}>
+            <View style={styles.btnGroup}>
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={() => setOpenCamera(false)}
+              >
+                <Ionicons name="close" size={22} color={"white"} />
+              </TouchableOpacity>
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: "flex-end",
+                  alignItems: "center",
+                  gap: SPACING,
+                  paddingBottom: HEIGHT >= 720 ? SPACING * 4.5 : SPACING * 3,
+                }}
+              >
+                <Button
+                  icon={flash === FlashMode.off ? images.flasho : images.flash}
+                  onPress={toggleFlash}
+                  label="flash"
+                />
+                <Button
+                  icon={images.flip}
+                  onPress={toggleCameraType}
+                  label="Flip"
+                />
+                <Button
+                  icon={images.timer}
+                  onPress={() => null}
+                  label="timer"
+                />
+                <Button
+                  icon={images.speed}
+                  onPress={() => null}
+                  label="speed"
+                />
+              </View>
+              <TouchableOpacity style={styles.openGallery}>
+                <Image
+                  source={
+                    capturedPhoto == null
+                      ? images.defaultUser
+                      : { uri: capturedPhoto.uri }
+                  }
+                  resizeMode="cover"
+                  style={{ width: "100%", height: "100%" }}
+                />
+                <View style={styles.uploadIcon}>
+                  <Feather name="upload-cloud" size={20} color={"white"} />
+                </View>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity
+              onPress={takePicktureAsync}
+              style={styles.pickBtn}
+            >
+              <View
+                style={{
+                  width: 35,
+                  height: 35,
+                  borderRadius: 35,
+                  backgroundColor: ACCENT_COLOR,
+                }}
+              />
+            </TouchableOpacity>
           </View>
-        </TouchableOpacity>
-      </View>
-      <TouchableOpacity style={styles.pickBtn}>
-        <View
-          style={{
-            width: 35,
-            height: 35,
-            borderRadius: 35,
-            backgroundColor: ACCENT_COLOR,
-          }}
-        />
-      </TouchableOpacity>
-    </ExpoCamera>
+        </View>
+      )}
+    </View>
   );
 };
 
@@ -187,5 +288,13 @@ const styles = StyleSheet.create({
     borderColor: "white",
     justifyContent: "center",
     alignItems: "center",
+  },
+  sheet: {
+    width: WIDTH,
+    height: MODAL_HEIGHT,
+    backgroundColor: BACKGROUND_COLOR,
+    overflow: "hidden",
+    position: "absolute",
+    bottom: -OVERDRAG,
   },
 });

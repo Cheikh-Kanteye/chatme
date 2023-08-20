@@ -1,16 +1,32 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ColorValue,
+} from "react-native";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { BACKGROUND_COLOR } from "@misc/colors";
+import { ACCENT_COLOR, BACKGROUND_COLOR } from "@misc/colors";
+import isColorDark from "@utils/isColorDark";
 
 interface IconBtnProps {
   icon: keyof typeof Ionicons.glyphMap;
+  color?: ColorValue;
+  onPress: () => void;
 }
 
-const IconBtn = ({ icon }: IconBtnProps) => {
+const IconBtn = ({ icon, color = ACCENT_COLOR, onPress }: IconBtnProps) => {
   return (
-    <TouchableOpacity style={styles.btn}>
-      <Ionicons name={icon} size={22} color={"black"} />
+    <TouchableOpacity
+      onPress={onPress}
+      style={[styles.btn, { backgroundColor: color }]}
+    >
+      <Ionicons
+        name={icon}
+        size={22}
+        color={isColorDark(color) ? "white" : "black"}
+      />
     </TouchableOpacity>
   );
 };

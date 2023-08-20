@@ -7,3 +7,4 @@ export { default as ChatHeader } from "./ChatHeader";
 export { default as Polling } from "./Polling";
 export { default as SheetLayout } from "./SheetLayout";
 export { default as Camera } from "./Camera";
+export { default as SendPicture } from "./SendPicture";
