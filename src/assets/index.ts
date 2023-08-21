@@ -19,4 +19,12 @@ export const images = {
   sticker: require("./images/sticker.png"),
   t: require("./images/t.png"),
   close: require("./images/close.png"),
+  chat: require("./images/chat.png"),
+  chato: require("./images/chat-o.png"),
+  grid: require("./images/grid.png"),
+  grido: require("./images/grid-o.png"),
+  call: require("./images/call.png"),
+  callo: require("./images/call-o.png"),
+  user: require("./images/user.png"),
+  usero: require("./images/user-o.png"),
 };

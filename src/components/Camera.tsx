@@ -7,20 +7,19 @@ import {
   Image,
   TouchableOpacity,
 } from "react-native";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Camera as ExpoCamera,
   CameraType,
   FlashMode,
   CameraCapturedPicture,
 } from "expo-camera";
-import { HEIGHT, OVERDRAG, R, SPACING, WIDTH } from "@misc/const";
+import { HEIGHT, OVERDRAG, SPACING, WIDTH } from "@misc/const";
 import { ACCENT_COLOR, BACKGROUND_COLOR } from "@misc/colors";
-import { Ionicons, Feather } from "@expo/vector-icons";
+import { Ionicons, Feather, MaterialIcons } from "@expo/vector-icons";
 import { images } from "@assets/index";
 import SheetLayout from "./SheetLayout";
 import SendPicture from "./SendPicture";
-import { useSheetGestureHandler } from "@hooks/useSheetGestureHandler";
 import {
   runOnJS,
   useSharedValue,
@@ -65,6 +64,8 @@ const Button = ({ icon, label, onPress }: ButtonProps) => {
 
 const Camera = ({ setOpenCamera }: CameraProps) => {
   const [type, setType] = useState(CameraType.back);
+  const [ratio, setRatio] = useState("16:9");
+  const [displayRatio, setDisplayRatio] = useState(false);
   const [permission, requestPermission] = ExpoCamera.useCameraPermissions();
   const [flash, setFlash] = useState(FlashMode.off);
   const [isPicturReady, setIsPictureReady] = useState(false);
@@ -112,6 +113,11 @@ const Camera = ({ setOpenCamera }: CameraProps) => {
       }
     });
 
+  useEffect(() => {
+    setDisplayRatio(true);
+    setTimeout(() => setDisplayRatio(false), 1000);
+  }, [ratio]);
+
   if (!permission) {
     requestPermission();
     return (
@@ -151,7 +157,7 @@ const Camera = ({ setOpenCamera }: CameraProps) => {
             style={{ flex: 1 }}
             type={type}
             flashMode={flash}
-            ratio="16:9"
+            ratio={ratio}
           />
           <View style={styles.container}>
             <View style={styles.btnGroup}>
@@ -220,6 +226,28 @@ const Camera = ({ setOpenCamera }: CameraProps) => {
               />
             </TouchableOpacity>
           </View>
+          {displayRatio && (
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "bold",
+                color: "white",
+                position: "absolute",
+                alignSelf: "center",
+                top: SPACING * 3,
+              }}
+            >
+              {ratio}
+            </Text>
+          )}
+          <TouchableOpacity
+            style={{ position: "absolute", top: SPACING * 2.6, left: SPACING }}
+            onPress={() =>
+              setRatio(ratio == "1:1" ? "4:3" : ratio == "4:3" ? "16:9" : "1:1")
+            }
+          >
+            <MaterialIcons name="aspect-ratio" size={24} color="white" />
+          </TouchableOpacity>
         </View>
       )}
     </View>

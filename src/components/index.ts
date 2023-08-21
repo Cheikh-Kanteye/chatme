@@ -8,3 +8,5 @@ export { default as Polling } from "./Polling";
 export { default as SheetLayout } from "./SheetLayout";
 export { default as Camera } from "./Camera";
 export { default as SendPicture } from "./SendPicture";
+export { default as TabBar } from "./TabBar";
+export { default as ContainerLayout } from "./ContainerLayout";

@@ -2,6 +2,8 @@ import ChatScreen from "@screens/ChatScreen";
 import { useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
 import * as NavBar from "expo-navigation-bar";
+import { NavigationContainer } from "@react-navigation/native";
+import TabNavigator from "src/navigation/TabNavigator";
 
 export default function App() {
   useEffect(() => {
@@ -9,9 +11,8 @@ export default function App() {
   }, []);
 
   return (
-    <>
-      <StatusBar style="dark" />
-      <ChatScreen />
-    </>
+    <NavigationContainer>
+      <TabNavigator />
+    </NavigationContainer>
   );
 }
