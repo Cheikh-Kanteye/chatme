@@ -1,5 +1,5 @@
 import { ACCENT_COLOR, BACKGROUND_COLOR } from "@misc/colors";
-import { HEIGHT, R, SPACING } from "@misc/const";
+import { HEIGHT, R, SPACING, WIDTH } from "@misc/const";
 import {
   View,
   Text,
@@ -124,8 +124,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     height: HEIGHT * 0.1,
     backgroundColor: BACKGROUND_COLOR,
-    margin: SPACING / 2,
     borderRadius: R * 2,
+    position: "absolute",
+    bottom: SPACING / 2,
+    alignSelf: "center",
+    width: WIDTH - SPACING,
+    elevation: 5,
   },
   btn: {
     flex: 1,

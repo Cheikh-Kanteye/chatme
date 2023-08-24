@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "esModuleInterop": true,
+    "moduleResolution": "Node",
     "baseUrl": ".",
     "paths": {
       "@screens/*": ["src/screens/*"],

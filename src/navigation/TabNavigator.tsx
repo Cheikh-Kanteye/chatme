@@ -14,7 +14,9 @@ const TabNavigator = () => {
   return (
     <Tab.Navigator
       tabBar={(props) => <TabBar {...{ props }} />}
-      screenOptions={{ headerShown: false }}
+      screenOptions={{
+        headerShown: false,
+      }}
     >
       <Tab.Screen name="messages" component={Messages} />
       <Tab.Screen name="status" component={Status} />

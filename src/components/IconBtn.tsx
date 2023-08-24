@@ -13,6 +13,7 @@ import isColorDark from "@utils/isColorDark";
 interface IconBtnProps {
   icon: keyof typeof Ionicons.glyphMap;
   color?: ColorValue;
+  primary?: boolean;
   onPress: () => void;
 }
 

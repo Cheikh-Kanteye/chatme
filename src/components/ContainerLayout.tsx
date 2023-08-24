@@ -5,12 +5,12 @@ import { View } from "react-native";
 
 interface Props {
   children: React.ReactNode;
-  Left?: React.ReactNode
-  Middle?: React.ReactNode
-  Right?: React.ReactNode
+  Left?: JSX.Element;
+  Middle?: React.ReactNode;
+  Right?: React.ReactNode;
 }
 
-const ContainerLayout = ({ children }: Props) => {
+const ContainerLayout = ({ children, Left, Right, Middle }: Props) => {
   return (
     <SafeAreaView
       style={{ flex: 1, paddingHorizontal: SPACING, backgroundColor: "white" }}
@@ -21,7 +21,11 @@ const ContainerLayout = ({ children }: Props) => {
           justifyContent: "space-between",
           alignItems: "center",
         }}
-      ></View>
+      >
+        {Left && Left}
+        {Middle && Middle}
+        {Right && Right}
+      </View>
       {children}
     </SafeAreaView>
   );
